@@ -1,0 +1,87 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  # JOB 1 : Exécuter les Tests Unitaires
+  tests:
+    runs-on: ubuntu-latest
+    
+    # Configuration du service PostgreSQL pour les tests
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres  # Mot de passe par défaut pour le test
+          POSTGRES_DB: employee_db
+        ports:
+          - 5432:5432
+        # Attendre que la DB soit prête (Healthcheck)
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer uv
+        uses: astral-sh/setup-uv@v1
+        with:
+          version: "latest"
+
+      - name: Configurer Python 3.12
+        run: uv python install 3.12
+
+      - name: Installer les dépendances
+        run: uv sync --all-extras --dev
+
+      - name: Créer le fichier .env pour les tests
+        # On recrée un .env basique pour que l'app puisse se connecter au service DB ci-dessus
+        run: |
+          echo "DB_USER=postgres" >> .env
+          echo "DB_PASSWORD=postgres" >> .env
+          echo "DB_NAME=employee_db" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "DB_HOST=localhost" >> .env  # Important: localhost dans le runner GitHub
+          echo "APP_PORT=8000" >> .env
+          echo "ENVIRONMENT=test" >> .env
+
+      - name: Lancer les tests
+        # Suppose que vous utilisez pytest
+        run: uv run pytest
+
+  # JOB 2 : Pousser vers Hugging Face (seulement si les tests passent)
+  sync-to-hub:
+    needs: tests
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' # Ne s'exécute que sur un push vers main
+    
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Nécessaire pour l'historique git complet
+          lfs: true      # Active LFS si vous avez de gros modèles/fichiers csv
+
+      - name: Pousser vers Hugging Face Hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USERNAME: ${{ secrets.HF_USERNAME }}
+          HF_SPACE_NAME: ${{ secrets.HF_SPACE_NAME }}
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          
+          # Ajout du remote Hugging Face
+          git remote add space https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME
+          
+          # Force push pour s'assurer que le Space est une copie exacte de GitHub
+          git push --force space main
