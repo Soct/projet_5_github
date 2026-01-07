@@ -62,7 +62,7 @@ jobs:
   sync-to-hub:
     needs: tests
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' # Ne s'exécute que sur un push vers main
+    if: github.ref == 'refs/heads/master' # Ne s'exécute que sur un push vers master
     
     steps:
       - name: Récupérer le code
