@@ -1,0 +1,26 @@
+[project]
+name = "projet-5"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.128.0",
+    "httpx>=0.28.1",
+    "joblib>=1.5.3",
+    "numpy>=2.4.0",
+    "pandas>=2.3.3",
+    "psycopg2-binary>=2.9.11",
+    "pydantic>=2.12.5",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+    "scikit-learn==1.7.2",
+    "sqlalchemy>=2.0.45",
+    "uvicorn>=0.40.0",
+    "xgboost==3.0.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "--cov=app --cov-report=term-missing --cov-report=html"
+testpaths = ["tests"]
+python_files = "test_*.py"
