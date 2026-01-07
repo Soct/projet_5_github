@@ -17,7 +17,7 @@ jobs:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres  # Mot de passe par défaut pour le test
+          POSTGRES_PASSWORD: mysecretpassword  # Mot de passe par défaut pour le test
           POSTGRES_DB: employee_db
         ports:
           - 5432:5432
@@ -47,7 +47,7 @@ jobs:
         # On recrée un .env basique pour que l'app puisse se connecter au service DB ci-dessus
         run: |
           echo "DB_USER=postgres" >> .env
-          echo "DB_PASSWORD=postgres" >> .env
+          echo "DB_PASSWORD=mysecretpassword" >> .env
           echo "DB_NAME=employee_db" >> .env
           echo "DB_PORT=5432" >> .env
           echo "DB_HOST=localhost" >> .env  # Important: localhost dans le runner GitHub
