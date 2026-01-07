@@ -62,14 +62,14 @@ jobs:
   sync-to-hub:
     needs: tests
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' # Ne s'exécute que sur un push vers master
+    if: github.ref == 'refs/heads/main'
     
     steps:
       - name: Récupérer le code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Nécessaire pour l'historique git complet
-          lfs: true      # Active LFS si vous avez de gros modèles/fichiers csv
+          fetch-depth: 0
+          lfs: true  # INDISPENSABLE : Télécharge les vrais fichiers LFS
 
       - name: Pousser vers Hugging Face Hub
         env:
@@ -80,8 +80,10 @@ jobs:
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           
-          # Ajout du remote Hugging Face
+          # Initialiser LFS pour que le push gère correctement les gros fichiers
+          git lfs install
+          
           git remote add space https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME
           
-          # CORRECTION ICI : On pousse HEAD vers la branche main distante
+          # Push vers la branche main distante
           git push --force space HEAD:main
