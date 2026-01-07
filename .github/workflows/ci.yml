@@ -83,5 +83,5 @@ jobs:
           # Ajout du remote Hugging Face
           git remote add space https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME
           
-          # Force push pour s'assurer que le Space est une copie exacte de GitHub
-          git push --force space main
+          # CORRECTION ICI : On pousse HEAD vers la branche main distante
+          git push --force space HEAD:main
