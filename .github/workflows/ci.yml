@@ -60,49 +60,43 @@ jobs:
 
   # JOB 2 : Pousser vers Hugging Face (seulement si les tests passent)
   sync-to-hub:
-    needs: tests
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
-    
-    steps:
-    - name: Récupérer le code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        lfs: true
+  needs: tests
+  runs-on: ubuntu-latest
+  if: github.ref == 'refs/heads/master'
+  
+  steps:
+  - name: Récupérer le code
+    uses: actions/checkout@v4
+    with:
+      fetch-depth: 0
+      lfs: true
 
-    - name: Installer XET
-      run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/huggingface/xet-core/refs/heads/main/git_xet/install.sh | sh
-        export PATH="$HOME/.xet/bin:$PATH"
-
-    - name: Configurer XET et pousser vers Hugging Face Hub
-      env:
-        HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        HF_USERNAME: ${{ secrets.HF_USERNAME }}
-        HF_SPACE_NAME: ${{ secrets.HF_SPACE_NAME }}
-      run: |
-        export PATH="$HOME/.xet/bin:$PATH"
-        
-        git config --global user.email "action@github.com"
-        git config --global user.name "GitHub Action"
-        
-        # Cloner le repo HF avec XET
-        git clone https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME hf_repo
-        cd hf_repo
-        
-        # Initialiser XET dans le repo HF
-        git xet install
-        
-        # Copier les fichiers depuis le repo source
-        cp -r ../models ./
-        cp -r ../*.py ./ 2>/dev/null || true
-        cp -r ../*.txt ./ 2>/dev/null || true
-        
-        # Ajouter les fichiers binaires à XET
-        git xet track "models/*.pkl"
-        git xet track "models/model"
-        
-        git add .
-        git commit -m "Mise à jour du modèle via CI/CD" || echo "Rien à commit"
-        git push origin main
+  - name: Installer XET et synchroniser
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_USERNAME: ${{ secrets.HF_USERNAME }}
+      HF_SPACE_NAME: ${{ secrets.HF_SPACE_NAME }}
+    run: |
+      # Installer XET
+      curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/huggingface/xet-core/refs/heads/main/git_xet/install.sh | sh
+      export PATH="$HOME/.xet/bin:$PATH"
+      
+      git config --global user.email "action@github.com"
+      git config --global user.name "GitHub Action"
+      
+      # Configurer XET dans le repo actuel
+      git xet install
+      
+      # Ajouter les fichiers binaires à XET
+      git xet track "models/*.pkl"
+      git xet track "models/model"
+      
+      # Ajouter le remote HF
+      git remote add space https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME
+      
+      # Commit tous les changements
+      git add .
+      git commit -m "Mise à jour complète via CI/CD" || echo "Rien à commit"
+      
+      # Push vers HF avec XET
+      git push --force space HEAD:main
