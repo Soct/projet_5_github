@@ -8,7 +8,7 @@ from app.database import Base
 class ModelManager:
     """Gestionnaire du modèle ML."""
     
-    def __init__(self, model_path: str = "models/model.pkl"):
+    def __init__(self, model_path: str = "models/model"):
         self.model_path = Path(model_path)
         self.pipeline = None
     
