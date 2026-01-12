@@ -1,4 +1,5 @@
 import pickle
+import joblib
 from pathlib import Path
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey
 from datetime import datetime
@@ -17,7 +18,8 @@ class ModelManager:
             raise FileNotFoundError(f"Modèle non trouvé : {self.model_path}")
         
         with open(self.model_path, 'rb') as f:
-            self.pipeline = pickle.load(f)
+            #self.pipeline = pickle.load(f)
+            self.pipeline = joblib.load(f)
         
         print(f"✅ Modèle chargé depuis {self.model_path}")
     
