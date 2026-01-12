@@ -82,7 +82,7 @@ jobs:
           
           # Initialiser LFS pour que le push gère correctement les gros fichiers
           git lfs install
-          
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/huggingface/xet-core/refs/heads/main/git_xet/install.sh | sh
           git remote add space https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME
           
           # Push vers la branche main distante
