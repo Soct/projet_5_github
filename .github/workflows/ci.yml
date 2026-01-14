@@ -71,7 +71,38 @@ jobs:
           fetch-depth: 0
           lfs: true
 
-      - name: Synchroniser vers Hugging Face Space
+      - name: Uploader le modèle vers Hugging Face Model Hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_MODEL_REPO: ${{ secrets.HF_MODEL_REPO }}
+        run: |
+          pip install huggingface-hub
+          python -c "
+          from huggingface_hub import HfApi, create_repo
+          import os
+          
+          api = HfApi()
+          repo_id = os.environ['HF_MODEL_REPO']  # Format: username/model-name
+          
+          # Créer le repo s'il n'existe pas
+          try:
+              create_repo(repo_id, repo_type='model', token=os.environ['HF_TOKEN'], exist_ok=True)
+          except Exception as e:
+              print(f'Repo existe déjà ou erreur: {e}')
+          
+          # Uploader le fichier modèle
+          if os.path.exists('models/model'):
+              api.upload_file(
+                  path_or_fileobj='models/model',
+                  path_in_repo='model',
+                  repo_id=repo_id,
+                  repo_type='model',
+                  token=os.environ['HF_TOKEN']
+              )
+              print('✅ Modèle uploadé vers HF Model Hub')
+          "
+      
+      - name: Synchroniser le code vers Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_USERNAME: ${{ secrets.HF_USERNAME }}
@@ -84,21 +115,12 @@ jobs:
           git clone https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME hf-space
           cd hf-space
           
-          # Ajouter models/ au .gitignore
-          echo "models/" >> .gitignore
-          echo "*.db" >> .gitignore
-          echo "*.pkl" >> .gitignore
-          echo "data_merge*.csv" >> .gitignore
-          
-          # Supprimer les fichiers binaires de l'index Git et créer un commit de nettoyage
-          git rm -r --cached models/ 2>/dev/null || true
-          git rm --cached *.db 2>/dev/null || true
-          git rm --cached *.pkl 2>/dev/null || true
-          
-          if ! git diff --cached --quiet; then
-            git add .gitignore
-            git commit -m "Nettoyage: suppression des fichiers binaires du tracking Git"
-            git push origin main
+          # Ajouter models/ au .gitignore si pas déjà fait
+          if ! grep -q "^models/" .gitignore 2>/dev/null; then
+            echo "models/" >> .gitignore
+            echo "*.db" >> .gitignore
+            echo "*.pkl" >> .gitignore
+            echo "data_merge*.csv" >> .gitignore
           fi
           
           # Copier uniquement les fichiers de code (exclure tous les binaires)
@@ -113,9 +135,6 @@ jobs:
             --exclude='__pycache__/' \
             --exclude='*.pyc' \
             ../ ./
-          
-          # S'assurer que models/ n'a pas été copié
-          rm -rf models/ *.db *.pkl data_merge*.csv 2>/dev/null || true
           
           # Commit et push les changements de code
           git add .

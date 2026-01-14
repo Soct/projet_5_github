@@ -1,6 +1,8 @@
 import pickle
 import joblib
+import os
 from pathlib import Path
+from huggingface_hub import hf_hub_download
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey
 from datetime import datetime
 from app.database import Base
@@ -11,14 +13,31 @@ class ModelManager:
     def __init__(self, model_path: str = "models/model"):
         self.model_path = Path(model_path)
         self.pipeline = None
+        self.hf_repo = os.getenv("HF_MODEL_REPO")  # Format: username/repo-name
     
     def load(self):
-        """Charge le modèle en mémoire."""
+        """Charge le modèle en mémoire (depuis HF Hub si configuré, sinon local)."""
+        # Si HF_MODEL_REPO est configuré, télécharger depuis HF Hub
+        if self.hf_repo:
+            try:
+                print(f"📥 Téléchargement du modèle depuis {self.hf_repo}...")
+                model_file = hf_hub_download(
+                    repo_id=self.hf_repo,
+                    filename="model",
+                    repo_type="model"
+                )
+                with open(model_file, 'rb') as f:
+                    self.pipeline = joblib.load(f)
+                print(f"✅ Modèle chargé depuis HF Hub: {self.hf_repo}")
+                return
+            except Exception as e:
+                print(f"⚠️  Erreur téléchargement HF: {e}. Tentative chargement local...")
+        
+        # Sinon, charger depuis le fichier local
         if not self.model_path.exists():
             raise FileNotFoundError(f"Modèle non trouvé : {self.model_path}")
         
         with open(self.model_path, 'rb') as f:
-            #self.pipeline = pickle.load(f)
             self.pipeline = joblib.load(f)
         
         print(f"✅ Modèle chargé depuis {self.model_path}")
