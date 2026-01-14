@@ -9,6 +9,14 @@ from app.database import init_db
 async def lifespan(app: FastAPI):
     # Code au démarrage
     print("🚀 Démarrage de l'API...")
+    
+    # Exécuter les migrations avant de charger le modèle
+    try:
+        from app.migrate import migrate_database
+        migrate_database()
+    except Exception as e:
+        print(f"⚠️  Erreur migration: {e}")
+    
     model_manager.load()  # ← Charger le modèle une seule fois
     init_db()
     yield
