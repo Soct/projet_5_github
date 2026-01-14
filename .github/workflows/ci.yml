@@ -84,10 +84,24 @@ jobs:
           git clone https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME hf-space
           cd hf-space
           
-          # Copier les fichiers du code (exclure les modèles binaires)
-          rsync -av --exclude='models/' --exclude='.git/' --exclude='hf-space/' ../ ./
+          # Copier uniquement les fichiers de code (exclure tous les binaires)
+          rsync -av \
+            --exclude='models/' \
+            --exclude='*.db' \
+            --exclude='*.pkl' \
+            --exclude='.git/' \
+            --exclude='hf-space/' \
+            --exclude='data_merge*.csv' \
+            --exclude='.venv/' \
+            --exclude='__pycache__/' \
+            --exclude='*.pyc' \
+            ../ ./
           
-          # Commit et push les changements
-          git add .
-          git commit -m "Mise à jour via CI/CD - $(date '+%Y-%m-%d %H:%M:%S')" || echo "Aucun changement à commit"
-          git push origin main
+          # Commit et push seulement si des changements existent
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "Aucun changement de code à synchroniser"
+          else
+            git add .
+            git commit -m "Mise à jour du code via CI/CD - $(date '+%Y-%m-%d %H:%M:%S')"
+            git push origin main
+          fi
