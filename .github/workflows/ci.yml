@@ -71,33 +71,36 @@ jobs:
           fetch-depth: 0
           lfs: true
 
-      - name: Installer Git LFS et synchroniser
+      - name: Installer XET et synchroniser
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_USERNAME: ${{ secrets.HF_USERNAME }}
           HF_SPACE_NAME: ${{ secrets.HF_SPACE_NAME }}
         run: |
-          # Installer Git LFS
-          sudo apt-get update
-          sudo apt-get install -y git-lfs
-          git lfs install
+          # Installer XET
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/huggingface/xet-core/refs/heads/main/git_xet/install.sh | sh
+          export PATH="$HOME/.xet/bin:$PATH"
           
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           
-          # Configurer LFS pour les fichiers binaires
-          git lfs track "models/*.pkl"
-          git lfs track "models/model"
+          # Configurer XET dans le repo actuel
+          git xet install
           
-          # Ajouter .gitattributes
+          # IMPORTANT: Tracker les fichiers AVANT de les ajouter
+          git xet track "models/*.pkl"
+          git xet track "models/model"
+          
+          # Ajouter .gitattributes créé par XET
           git add .gitattributes
+          git commit -m "Configure XET tracking" || echo "XET déjà configuré"
           
           # Ajouter le remote HF
-          git remote add space https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME
+          git remote add space https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME || echo "Remote déjà existant"
           
-          # Commit tous les changements
+          # Maintenant ajouter tous les fichiers (y compris les binaires)
           git add .
           git commit -m "Mise à jour complète via CI/CD" || echo "Rien à commit"
           
-          # Push vers HF avec LFS
+          # Push vers HF avec XET
           git push --force space HEAD:main
