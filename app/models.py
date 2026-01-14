@@ -17,8 +17,8 @@ class ModelManager:
     
     def load(self):
         """Charge le modèle en mémoire (depuis HF Hub si configuré, sinon local)."""
-        # Si HF_MODEL_REPO est configuré, télécharger depuis HF Hub
-        if self.hf_repo:
+        # Si HF_MODEL_REPO est configuré et non vide, télécharger depuis HF Hub
+        if self.hf_repo and self.hf_repo.strip():
             try:
                 print(f"📥 Téléchargement du modèle depuis {self.hf_repo}...")
                 model_file = hf_hub_download(
@@ -31,11 +31,18 @@ class ModelManager:
                 print(f"✅ Modèle chargé depuis HF Hub: {self.hf_repo}")
                 return
             except Exception as e:
-                print(f"⚠️  Erreur téléchargement HF: {e}. Tentative chargement local...")
+                print(f"⚠️  Erreur téléchargement HF: {e}")
+                print(f"⚠️  Basculement vers chargement local...")
         
-        # Sinon, charger depuis le fichier local
+        # Charger depuis le fichier local
         if not self.model_path.exists():
-            raise FileNotFoundError(f"Modèle non trouvé : {self.model_path}")
+            # Créer le dossier models/ s'il n'existe pas
+            self.model_path.parent.mkdir(parents=True, exist_ok=True)
+            raise FileNotFoundError(
+                f"Modèle non trouvé : {self.model_path}\n"
+                f"Assurez-vous que le fichier existe ou configurez HF_MODEL_REPO correctement.\n"
+                f"HF_MODEL_REPO actuel: {self.hf_repo or 'non configuré'}"
+            )
         
         with open(self.model_path, 'rb') as f:
             self.pipeline = joblib.load(f)
