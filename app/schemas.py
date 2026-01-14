@@ -14,8 +14,9 @@ class EmployeeInput(BaseModel):
             "departement": "IT",
             "poste": "Développeur Senior",
             "niveau_hierarchique_poste": 3,
-            "heure_supplementaires": 5,
+            "heure_supplementaires": "Oui",
             "nombre_employee_sous_responsabilite": 0,
+            "nombre_heures_travailless": 80,
             "annee_experience_totale": 10.0,
             "nombre_experiences_precedentes": 2,
             "annees_dans_l_entreprise": 5.0,
@@ -52,8 +53,9 @@ class EmployeeInput(BaseModel):
     departement: str = Field(..., description="Département")
     poste: str = Field(..., description="Intitulé du poste")
     niveau_hierarchique_poste: int = Field(..., ge=1, description="Niveau hiérarchique (1-5)")
-    heure_supplementaires: int = Field(..., ge=0, description="Heures supplémentaires par mois")
+    heure_supplementaires: str = Field(..., description="Heures supplémentaires (Oui/Non)")
     nombre_employee_sous_responsabilite: int = Field(..., ge=0, description="Nombre d'employés sous responsabilité")
+    nombre_heures_travailless: int = Field(..., ge=0, description="Nombre d'heures travaillées")
     
     # Expérience professionnelle
     annee_experience_totale: float = Field(..., ge=0, description="Années d'expérience totale")
@@ -83,6 +85,9 @@ class EmployeeInput(BaseModel):
     
     # Mobilité
     frequence_deplacement: str = Field(..., description="Fréquence de déplacement")
+    
+    # Cible (optionnel - utilisé pour le training)
+    a_quitte_l_entreprise: str | None = Field(None, description="A quitté l'entreprise (Oui/Non)")
 
 
 class PredictionOutput(BaseModel):

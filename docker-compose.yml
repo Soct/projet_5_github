@@ -11,6 +11,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/init.sql
     # AJOUT : Définition de la santé du conteneur
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d employee_db"]
@@ -26,10 +27,27 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://postgres:mysecretpassword@db:5432/employee_db
+    volumes:
+      - ./data_merge.csv:/app/data_merge.csv
+      - ./models:/app/models
     # L'application attend maintenant que le healthcheck de 'db' passe
     depends_on:
       db:
         condition: service_healthy
+
+  seed:
+    build: .
+    container_name: seed_service
+    environment:
+      - DATABASE_URL=postgresql://postgres:mysecretpassword@db:5432/employee_db
+    volumes:
+      - ./data_merge.csv:/app/data_merge.csv
+      - ./app:/app/app
+    depends_on:
+      db:
+        condition: service_healthy
+    command: /bin/uv run ./app/seed.py --csv-file data_merge.csv --update --database-url postgresql://postgres:mysecretpassword@db:5432/employee_db
+    restart: "no"
 
 volumes:
   postgres_data:

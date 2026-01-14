@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS employees (
     satisfaction_employee_equilibre_pro_perso INT,
     note_evaluation_precedente FLOAT,
     note_evaluation_actuelle FLOAT,
-    heure_supplementaires INT,
+    heure_supplementaires VARCHAR(10),
+    nombre_heures_travailless INT,
     augementation_salaire_precedente FLOAT,
     nombre_participation_pee INT,
     nb_formations_suivies INT,
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS employees (
     niveau_education INT,
     domaine_etude VARCHAR(100),
     frequence_deplacement VARCHAR(50),
+    a_quitte_l_entreprise VARCHAR(10),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

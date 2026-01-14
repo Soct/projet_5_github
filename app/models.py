@@ -66,7 +66,8 @@ class Employee(Base):
     satisfaction_employee_equilibre_pro_perso = Column(Integer)
     note_evaluation_precedente = Column(Float)
     note_evaluation_actuelle = Column(Float)
-    heure_supplementaires = Column(Integer)
+    heure_supplementaires = Column(String(10))
+    nombre_heures_travailless = Column(Integer)
     augementation_salaire_precedente = Column(Float)
     nombre_participation_pee = Column(Integer)
     nb_formations_suivies = Column(Integer)
@@ -75,6 +76,7 @@ class Employee(Base):
     niveau_education = Column(Integer)
     domaine_etude = Column(String(100))
     frequence_deplacement = Column(String(50))
+    a_quitte_l_entreprise = Column(String(10))
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class Prediction(Base):
