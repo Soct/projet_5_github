@@ -112,6 +112,9 @@ jobs:
           git clone https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME hf-space
           cd hf-space
           
+          # Supprimer le dossier models/ du clone (uploadé via API)
+          rm -rf models/
+          
           # Ajouter models/ au .gitignore si pas déjà fait
           if ! grep -q "^models/" .gitignore 2>/dev/null; then
             echo "models/" >> .gitignore
@@ -119,6 +122,9 @@ jobs:
             echo "*.pkl" >> .gitignore
             echo "data_merge*.csv" >> .gitignore
           fi
+          
+          # Supprimer models/ de l'index Git s'il existe
+          git rm -r --cached models/ 2>/dev/null || true
           
           # Copier uniquement les fichiers de code (exclure tous les binaires)
           rsync -av \
