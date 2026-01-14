@@ -114,6 +114,9 @@ jobs:
             --exclude='*.pyc' \
             ../ ./
           
+          # S'assurer que models/ n'a pas été copié
+          rm -rf models/ *.db *.pkl data_merge*.csv 2>/dev/null || true
+          
           # Commit et push les changements de code
           git add .
           if git diff --cached --quiet; then
