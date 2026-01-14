@@ -71,35 +71,32 @@ jobs:
           fetch-depth: 0
           lfs: true
 
-      - name: Uploader le modèle vers Hugging Face Model Hub
+      - name: Uploader le modèle vers Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_MODEL_REPO: ${{ secrets.HF_MODEL_REPO }}
+          HF_USERNAME: ${{ secrets.HF_USERNAME }}
+          HF_SPACE_NAME: ${{ secrets.HF_SPACE_NAME }}
         run: |
           pip install huggingface-hub
           python -c "
-          from huggingface_hub import HfApi, create_repo
+          from huggingface_hub import HfApi
           import os
           
           api = HfApi()
-          repo_id = os.environ['HF_MODEL_REPO']  # Format: username/model-name
+          repo_id = f\"{os.environ['HF_USERNAME']}/{os.environ['HF_SPACE_NAME']}\"
           
-          # Créer le repo s'il n'existe pas
-          try:
-              create_repo(repo_id, repo_type='model', token=os.environ['HF_TOKEN'], exist_ok=True)
-          except Exception as e:
-              print(f'Repo existe déjà ou erreur: {e}')
-          
-          # Uploader le fichier modèle
+          # Uploader le fichier modèle directement dans le Space (pas via Git)
           if os.path.exists('models/model'):
               api.upload_file(
                   path_or_fileobj='models/model',
-                  path_in_repo='model',
+                  path_in_repo='models/model',
                   repo_id=repo_id,
-                  repo_type='model',
+                  repo_type='space',
                   token=os.environ['HF_TOKEN']
               )
-              print('✅ Modèle uploadé vers HF Model Hub')
+              print('✅ Modèle uploadé vers le Space HF via API')
+          else:
+              print('⚠️  Fichier models/model introuvable')
           "
       
       - name: Synchroniser le code vers Hugging Face Space
