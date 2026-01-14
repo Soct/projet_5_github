@@ -10,7 +10,6 @@ WORKDIR /app
 # Paramètres uv
 ENV UV_COMPILE_BYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    HF_MODEL_REPO="" \
     HF_MODEL_REPO=""
 
 # Copier les fichiers de dépendances
