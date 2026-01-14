@@ -40,7 +40,11 @@ def prepare_features(data_dict: dict) -> pd.DataFrame:
         
     if 'heure_supplementaires' in features:
         val = features['heure_supplementaires']
-        features['heure_supplementaires'] = 1 if (val and val > 0) else 0
+        # Conversion "Oui"/"Non" -> 1/0
+        if isinstance(val, str):
+            features['heure_supplementaires'] = 1 if val.strip().lower() in ['oui', 'yes'] else 0
+        else:
+            features['heure_supplementaires'] = 1 if (val and val > 0) else 0
 
     # 4. Création du DataFrame
     df = pd.DataFrame([features])
