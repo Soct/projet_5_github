@@ -13,8 +13,9 @@ def employee_data():
         "departement": "R&D",
         "poste": "Ingénieur",
         "niveau_hierarchique_poste": 2,
-        "heure_supplementaires": 5,
+        "heure_supplementaires": "Oui",  # Modifié : String au lieu de Int
         "nombre_employee_sous_responsabilite": 2,
+        "nombre_heures_travailless": 80,  # Ajouté : nouveau champ
         "annee_experience_totale": 8.0,
         "nombre_experiences_precedentes": 2,
         "annees_dans_l_entreprise": 5.0,
