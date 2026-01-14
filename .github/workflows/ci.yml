@@ -70,34 +70,6 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
-
-      - name: Uploader le modèle vers Hugging Face Space
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_USERNAME: ${{ secrets.HF_USERNAME }}
-          HF_SPACE_NAME: ${{ secrets.HF_SPACE_NAME }}
-        run: |
-          pip install huggingface-hub
-          python -c "
-          from huggingface_hub import HfApi
-          import os
-          
-          api = HfApi()
-          repo_id = f\"{os.environ['HF_USERNAME']}/{os.environ['HF_SPACE_NAME']}\"
-          
-          # Uploader le fichier modèle directement dans le Space (pas via Git)
-          if os.path.exists('models/model'):
-              api.upload_file(
-                  path_or_fileobj='models/model',
-                  path_in_repo='models/model',
-                  repo_id=repo_id,
-                  repo_type='space',
-                  token=os.environ['HF_TOKEN']
-              )
-              print('✅ Modèle uploadé vers le Space HF via API')
-          else:
-              print('⚠️  Fichier models/model introuvable')
-          "
       
       - name: Synchroniser le code vers Hugging Face Space
         env:
@@ -112,8 +84,11 @@ jobs:
           git clone https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME hf-space
           cd hf-space
           
-          # Supprimer le dossier models/ du clone (uploadé via API)
-          rm -rf models/
+          # Sauvegarder models/ s'il existe déjà
+          if [ -d "models" ]; then
+            cp -r models ../models_backup
+            echo "📦 Sauvegarde de models/ existant"
+          fi
           
           # Ajouter models/ au .gitignore si pas déjà fait
           if ! grep -q "^models/" .gitignore 2>/dev/null; then
@@ -147,3 +122,31 @@ jobs:
             git commit -m "Mise à jour du code via CI/CD - $(date '+%Y-%m-%d %H:%M:%S')"
             git push origin main
           fi
+
+      - name: Uploader le modèle vers Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USERNAME: ${{ secrets.HF_USERNAME }}
+          HF_SPACE_NAME: ${{ secrets.HF_SPACE_NAME }}
+        run: |
+          pip install huggingface-hub
+          python -c "
+          from huggingface_hub import HfApi
+          import os
+          
+          api = HfApi()
+          repo_id = f\"{os.environ['HF_USERNAME']}/{os.environ['HF_SPACE_NAME']}\"
+          
+          # Uploader le fichier modèle directement dans le Space (pas via Git)
+          if os.path.exists('models/model'):
+              api.upload_file(
+                  path_or_fileobj='models/model',
+                  path_in_repo='models/model',
+                  repo_id=repo_id,
+                  repo_type='space',
+                  token=os.environ['HF_TOKEN']
+              )
+              print('✅ Modèle uploadé vers le Space HF via API')
+          else:
+              print('⚠️  Fichier models/model introuvable')
+          "
