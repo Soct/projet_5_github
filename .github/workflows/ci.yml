@@ -84,13 +84,7 @@ jobs:
           git clone https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME hf-space
           cd hf-space
           
-          # Sauvegarder models/ temporairement s'il existe déjà dans HF Space
-          if [ -d "models" ]; then
-            cp -r models /tmp/models_backup_${{ github.run_id }}
-            echo "📦 Sauvegarde temporaire de models/ existant"
-          fi
-          
-          # Ajouter models/ au .gitignore de HF Space si pas déjà fait
+          # Ajouter models/ au .gitignore de HF Space AVANT tout
           if ! grep -q "^models/" .gitignore 2>/dev/null; then
             echo "models/" >> .gitignore
             echo "*.db" >> .gitignore
@@ -99,8 +93,12 @@ jobs:
             echo "📝 Ajout des exclusions au .gitignore de HF Space"
           fi
           
-          # Supprimer models/ de l'index Git de HF Space s'il existe
-          git rm -r --cached models/ 2>/dev/null || true
+          # Supprimer models/ du tracking Git de HF Space
+          if [ -d "models" ]; then
+            git rm -r --cached models/ 2>/dev/null || true
+            rm -rf models/
+            echo "🗑️ Suppression de models/ du dépôt HF Space"
+          fi
           
           # Copier uniquement les fichiers de code (exclure tous les binaires)
           rsync -av \
@@ -116,15 +114,20 @@ jobs:
             --exclude='*.pyc' \
             ../ ./
           
+          # S'assurer que models/ n'est pas stagé
+          git reset HEAD models/ 2>/dev/null || true
+          git rm -r --cached models/ 2>/dev/null || true
+          
           # Commit et push UNIQUEMENT le code (sans modèles)
-          git add .
-          git add .gitignore
+          git add -A
+          git reset HEAD models/ 2>/dev/null || true
+          
           if git diff --cached --quiet; then
             echo "✅ Aucun changement de code à synchroniser"
           else
             git commit -m "Mise à jour du code via CI/CD - $(date '+%Y-%m-%d %H:%M:%S')"
             git push origin main
-            echo "✅ Code synchronisé vers HF Space"
+            echo "✅ Code synchronisé vers HF Space (sans modèles)"
           fi
 
       - name: Uploader le modèle vers Hugging Face Space
