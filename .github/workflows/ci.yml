@@ -51,7 +51,7 @@ jobs:
           echo "DB_NAME=employee_db" >> .env
           echo "DB_PORT=5432" >> .env
           echo "DB_HOST=localhost" >> .env  # Important: localhost dans le runner GitHub
-          echo "APP_PORT=8000" >> .env
+          echo "APP_PORT=7860" >> .env
           echo "ENVIRONMENT=test" >> .env
 
       - name: Lancer les tests
