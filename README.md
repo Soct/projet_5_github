@@ -103,7 +103,7 @@ docker compose ps
 docker compose logs -f app
 ```
 
-**L'API sera accessible sur** : http://localhost:8000
+**L'API sera accessible sur** : http://localhost:7860
 
 ### Option 2 : Installation locale (Développement)
 
@@ -131,7 +131,7 @@ uv run python app/seed.py --csv-file data_merge.csv --update \
   --database-url postgresql://postgres:mysecretpassword@localhost:5432/employee_db
 
 # 6. Lancer l'API
-uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+uv run uvicorn app.main:app --host 0.0.0.0 --port 7860 --reload
 ```
 
 ---
@@ -323,8 +323,8 @@ uv run ./app/seed.py \
 
 FastAPI génère automatiquement une documentation OpenAPI :
 
-- **Swagger UI** : http://localhost:8000/docs
-- **ReDoc** : http://localhost:8000/redoc
+- **Swagger UI** : http://localhost:7860/docs
+- **ReDoc** : http://localhost:7860/redoc
 
 ### Endpoints disponibles
 
@@ -385,7 +385,7 @@ Content-Type: application/json
 GET /predict_employee/{id_employee}
 
 # Exemple
-curl http://localhost:8000/predict_employee/42
+curl http://localhost:7860/predict_employee/42
 
 # Réponse
 {
