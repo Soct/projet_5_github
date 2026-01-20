@@ -22,6 +22,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from pydantic import ValidationError
 import logging
+import time
 
 # Importez vos modèles existants
 from app.schemas import EmployeeInput 
@@ -45,9 +46,32 @@ class EmployeeSeeder:
             database_url: URL de connexion à la base de données
             batch_size: Taille des lots pour l'insertion
         """
-        self.engine = create_engine(database_url)
-        self.SessionLocal = sessionmaker(bind=self.engine)
+        self.database_url = database_url
         self.batch_size = batch_size
+        self.engine = None
+        self.SessionLocal = None
+        
+    def wait_for_db(self, max_retries=30, delay=2):
+        """Wait for database to be ready."""
+        for attempt in range(max_retries):
+            try:
+                # Try to connect
+                if self.engine is None:
+                    self.engine = create_engine(self.database_url)
+                    self.SessionLocal = sessionmaker(bind=self.engine)
+                
+                connection = self.engine.connect()
+                connection.close()
+                logger.info("✅ Base de données prête!")
+                return True
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"⏳ Attente de la base de données (tentative {attempt + 1}/{max_retries})...")
+                    time.sleep(delay)
+                else:
+                    logger.error(f"❌ Impossible de se connecter à la base de données après {max_retries} tentatives")
+                    raise
+        return False
         
     def validate_csv_data(self, df: pd.DataFrame) -> List[EmployeeInput]:
         """
@@ -275,6 +299,11 @@ def main():
         # Initialiser le seeder
         logger.info("Initialisation du seeder...")
         seeder = EmployeeSeeder(args.database_url, args.batch_size)
+        
+        # Attendre que la base de données soit prête
+        logger.info("Attente de la base de données...")
+        seeder.wait_for_db()
+        
         logger.info("Seeder initialisé avec succès")
         
         # Afficher les stats avant
