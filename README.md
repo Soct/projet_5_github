@@ -1,16 +1,14 @@
 ---
-title: {{title}}
-emoji: {{emoji}}
-colorFrom: {{colorFrom}}
-colorTo: {{colorTo}}
-sdk: {{sdk}}
-sdk_version: "{{sdkVersion}}"
-{{#pythonVersion}}
-python_version: "{{pythonVersion}}"
-{{/pythonVersion}}
-app_file: app.py
+title: Projet 5
+emoji: 🏃
+colorFrom: blue
+colorTo: gray
+sdk: docker
 pinned: false
 ---
+
+Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
+
 # API de Prédiction de Turnover - Système de Classification ML
 
 API RESTful développée avec FastAPI pour prédire le risque de départ des employés en utilisant un modèle XGBoost. L'application intègre une base de données PostgreSQL pour le stockage et le logging des prédictions, et est containerisée avec Docker pour faciliter le déploiement.
