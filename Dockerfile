@@ -24,6 +24,6 @@ COPY . .
 # Installer le projet
 RUN /bin/uv sync --frozen --no-dev
 
-EXPOSE 8000
+EXPOSE 7860
 
 CMD ["/bin/uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
