@@ -13,6 +13,11 @@ Check out the configuration reference at https://huggingface.co/docs/hub/spaces-
 
 API RESTful développée avec FastAPI pour prédire le risque de départ des employés en utilisant un modèle XGBoost. L'application intègre une base de données PostgreSQL pour le stockage et le logging des prédictions, et est containerisée avec Docker pour faciliter le déploiement.
 
+## API en ligne
+
+L'API est déployée et accessible à l'adresse suivante :
+**https://maphe-projet-5.hf.space/docs**
+
 ## Table des matières
 
 - [Architecture du Projet](#architecture-du-projet)
