@@ -71,6 +71,12 @@ jobs:
           fetch-depth: 0
           lfs: true
       
+      - name: Télécharger les fichiers LFS
+        run: |
+          git lfs pull
+          echo "📦 Fichiers LFS téléchargés"
+          ls -lh models/
+      
       - name: Synchroniser le code vers Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
