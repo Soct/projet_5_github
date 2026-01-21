@@ -10,7 +10,7 @@ from app.database import Base
 class ModelManager:
     """Gestionnaire du modèle ML."""
     
-    def __init__(self, model_path: str = "models/model"):
+    def __init__(self, model_path: str = "models/model.pkl"):
         self.model_path = Path(model_path)
         self.pipeline = None
         self.hf_repo = os.getenv("HF_MODEL_REPO")  # Format: username/repo-name
@@ -27,7 +27,7 @@ class ModelManager:
                     repo_type="model"
                 )
                 with open(model_file, 'rb') as f:
-                    self.pipeline = joblib.load(f)
+                    self.pipeline = pickle.load(f)
                 print(f"✅ Modèle chargé depuis HF Hub: {self.hf_repo}")
                 return
             except Exception as e:
@@ -45,7 +45,7 @@ class ModelManager:
             )
         
         with open(self.model_path, 'rb') as f:
-            self.pipeline = joblib.load(f)
+            self.pipeline = pickle.load(f)
         
         print(f"✅ Modèle chargé depuis {self.model_path}")
     
