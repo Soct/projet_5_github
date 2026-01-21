@@ -20,7 +20,7 @@ RUN /bin/uv sync --frozen --no-install-project --no-dev
 
 # Copier le reste du code
 COPY . .
-
+RUN git lfs pull
 # Installer le projet
 RUN /bin/uv sync --frozen --no-dev
 
