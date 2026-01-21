@@ -43,10 +43,25 @@ class ModelManager:
                 f"HF_MODEL_REPO actuel: {self.hf_repo or 'non configuré'}"
             )
         
-        # Utiliser joblib pour charger le modèle (compatible avec scikit-learn)
-        self.pipeline = joblib.load(self.model_path)
-        
-        print(f"✅ Modèle chargé depuis {self.model_path}")
+        # Essayer de charger avec joblib (compatible avec scikit-learn)
+        try:
+            self.pipeline = joblib.load(self.model_path)
+            print(f"✅ Modèle chargé depuis {self.model_path}")
+        except (KeyError, ValueError, pickle.UnpicklingError) as e:
+            # Fallback : essayer avec pickle si joblib échoue
+            print(f"⚠️  Erreur joblib: {e}")
+            print(f"⚠️  Tentative avec pickle...")
+            try:
+                with open(self.model_path, 'rb') as f:
+                    self.pipeline = pickle.load(f)
+                print(f"✅ Modèle chargé depuis {self.model_path} (pickle)")
+            except Exception as e2:
+                raise RuntimeError(
+                    f"Impossible de charger le modèle depuis {self.model_path}\n"
+                    f"Erreur joblib: {e}\n"
+                    f"Erreur pickle: {e2}\n"
+                    f"Le modèle peut avoir été créé avec une version incompatible de Python/scikit-learn."
+                ) from e2
     
     def predict(self, features):
         """Fait une prédiction."""
