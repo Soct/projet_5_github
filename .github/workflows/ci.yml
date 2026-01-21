@@ -71,11 +71,14 @@ jobs:
           fetch-depth: 0
           lfs: true
       
-      - name: Télécharger les fichiers LFS
+      - name: Vérifier les fichiers du modèle
         run: |
-          git lfs pull
-          echo "📦 Fichiers LFS téléchargés"
+          echo "📦 Vérification des fichiers models/"
           ls -lh models/
+          echo "🔍 Type du fichier modèle:"
+          file models/model
+          echo "🔍 Premières lignes (hex):"
+          xxd -l 64 models/model || true
       
       - name: Synchroniser le code vers Hugging Face Space
         env:
@@ -143,23 +146,47 @@ jobs:
           HF_SPACE_NAME: ${{ secrets.HF_SPACE_NAME }}
         run: |
           pip install huggingface-hub
-          python -c "
+          python << 'EOF'
           from huggingface_hub import HfApi
           import os
+          import sys
           
-          api = HfApi()
-          repo_id = f\"{os.environ['HF_USERNAME']}/{os.environ['HF_SPACE_NAME']}\"
-          
-          # Uploader le fichier modèle directement dans le Space (pas via Git)
-          if os.path.exists('models/model'):
+          try:
+              api = HfApi()
+              repo_id = f"{os.environ['HF_USERNAME']}/{os.environ['HF_SPACE_NAME']}"
+              model_path = 'models/model'
+              
+              # Vérifier que le fichier existe et est valide
+              if not os.path.exists(model_path):
+                  print(f'❌ Fichier {model_path} introuvable')
+                  sys.exit(1)
+              
+              file_size = os.path.getsize(model_path)
+              print(f'📊 Taille du fichier: {file_size:,} octets')
+              
+              # Vérifier que ce n'est pas un pointeur Git LFS
+              with open(model_path, 'rb') as f:
+                  header = f.read(100)
+                  if header.startswith(b'version https://git-lfs.github.com'):
+                      print('❌ ERREUR: Le fichier est un pointeur Git LFS, pas le fichier réel!')
+                      print('Contenu:', header.decode('utf-8', errors='ignore'))
+                      sys.exit(1)
+              
+              print(f'✅ Fichier valide, upload vers {repo_id}...')
+              
+              # Uploader le fichier modèle directement dans le Space (pas via Git)
               api.upload_file(
-                  path_or_fileobj='models/model',
+                  path_or_fileobj=model_path,
                   path_in_repo='models/model',
                   repo_id=repo_id,
                   repo_type='space',
                   token=os.environ['HF_TOKEN']
               )
               print('✅ Modèle uploadé vers le Space HF via API')
-          else:
-              print('⚠️  Fichier models/model introuvable')
-          "
+              
+          except Exception as e:
+              print(f'❌ Erreur lors de l\'upload: {e}')
+              import traceback
+              traceback.print_exc()
+              sys.exit(1)
+          EOF

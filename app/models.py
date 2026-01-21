@@ -26,6 +26,16 @@ class ModelManager:
                     filename="model",
                     repo_type="model"
                 )
+                
+                # Vérifier si c'est un pointeur Git LFS
+                with open(model_file, 'rb') as f:
+                    header = f.read(100)
+                    if header.startswith(b'version https://git-lfs.github.com'):
+                        raise ValueError(
+                            "Le fichier téléchargé est un pointeur Git LFS, pas le modèle réel. "
+                            "Vérifiez la configuration Git LFS sur Hugging Face."
+                        )
+                
                 self.pipeline = joblib.load(model_file)
                 print(f"✅ Modèle chargé depuis HF Hub: {self.hf_repo}")
                 return
@@ -43,6 +53,16 @@ class ModelManager:
                 f"HF_MODEL_REPO actuel: {self.hf_repo or 'non configuré'}"
             )
         
+        # Vérifier si le fichier local est un pointeur Git LFS
+        with open(self.model_path, 'rb') as f:
+            header = f.read(100)
+            if header.startswith(b'version https://git-lfs.github.com'):
+                raise ValueError(
+                    f"Le fichier {self.model_path} est un pointeur Git LFS, pas le modèle réel.\n"
+                    f"Exécutez: git lfs pull\n"
+                    f"Contenu du fichier: {header.decode('utf-8', errors='ignore')}"
+                )
+        
         # Essayer de charger avec joblib (compatible avec scikit-learn)
         try:
             self.pipeline = joblib.load(self.model_path)
@@ -56,11 +76,18 @@ class ModelManager:
                     self.pipeline = pickle.load(f)
                 print(f"✅ Modèle chargé depuis {self.model_path} (pickle)")
             except Exception as e2:
+                # Afficher les premiers octets pour le diagnostic
+                with open(self.model_path, 'rb') as f:
+                    first_bytes = f.read(200)
+                    print(f"🔍 Premiers octets du fichier (hex): {first_bytes.hex()[:100]}")
+                    print(f"🔍 Premiers octets du fichier (texte): {first_bytes[:100]}")
+                
                 raise RuntimeError(
                     f"Impossible de charger le modèle depuis {self.model_path}\n"
                     f"Erreur joblib: {e}\n"
                     f"Erreur pickle: {e2}\n"
-                    f"Le modèle peut avoir été créé avec une version incompatible de Python/scikit-learn."
+                    f"Le modèle peut avoir été créé avec une version incompatible de Python/scikit-learn,\n"
+                    f"ou le fichier est corrompu/pointeur Git LFS."
                 ) from e2
     
     def predict(self, features):
