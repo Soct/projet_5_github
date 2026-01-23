@@ -183,7 +183,7 @@ services:
 
 #### Production
 
-Variables gérées via secrets Docker/Kubernetes :
+Variables gérées via secrets :
 
 ```env
 DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/${DB_NAME}
@@ -197,9 +197,8 @@ LOG_LEVEL=INFO
 
 1. **Jamais** de secrets dans le code source
 2. Utilisation de variables d'environnement
-3. Secrets stockés dans GitHub Actions Secrets
-4. Hachage bcrypt pour les mots de passe utilisateurs
-5. Connexions DB avec certificats SSL en production
+3. Secrets stockés dans GitHub Actions Secrets & dans HF Spaces
+4. Connexions DB avec certificats SSL en production
 
 **Secrets requis pour le CI/CD :**
 
@@ -406,8 +405,8 @@ curl http://localhost:7860/predict_employee/42
 # Réponse
 {
   "id_employee": 42,
-  "prediction": 0,
-  "confidence": 0.92
+  "prediction": 1,
+  "confidence": 0.6109700798988342
 }
 ```
 
@@ -806,23 +805,7 @@ INSERT INTO predictions (
 
 #### Tableaux de bord suggérés
 
-**1. Dashboard RH - Monitoring du turnover**
-
-```sql
--- Taux de risque par département
-SELECT 
-    e.departement,
-    COUNT(*) as total_predictions,
-    SUM(CASE WHEN p.prediction = 1 THEN 1 ELSE 0 END) as at_risk,
-    ROUND(AVG(p.confidence), 2) as avg_confidence
-FROM predictions p
-JOIN employees e ON p.id_employee = e.id_employee
-WHERE p.created_at >= NOW() - INTERVAL '30 days'
-GROUP BY e.departement
-ORDER BY at_risk DESC;
-```
-
-**2. Dashboard Analytique - Performance du modèle**
+**1. Dashboard Analytique - Performance du modèle**
 
 ```sql
 -- Évolution de la confiance du modèle
@@ -835,7 +818,7 @@ GROUP BY DATE(created_at)
 ORDER BY date DESC;
 ```
 
-**3. Dashboard Opérationnel - Employés à risque**
+**2. Dashboard Opérationnel - Employés à risque**
 
 ```sql
 -- Liste des employés high-risk à contacter
